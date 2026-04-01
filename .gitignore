@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+.DS_Store
+
+# Secretos y Entorno
+.env
+credentials.json
+token.json
+outlook_credentials.json
+o365_token.txt
+
+# Base de datos local
+tasks.json
+audios/
