@@ -1,4 +1,5 @@
 import os
+import sys
 import tempfile
 from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -125,6 +126,7 @@ if __name__ == '__main__':
         app.run_webhook(
             listen="0.0.0.0",
             port=PORT,
+            url_path=TELEGRAM_BOT_TOKEN,
             webhook_url=f"{RENDER_EXTERNAL_URL}/{TELEGRAM_BOT_TOKEN}"
         )
     else:
