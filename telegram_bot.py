@@ -6,8 +6,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 from openai import OpenAI
 
-from task_validator import es_tarea_valida
-from task_extractor import extraer_tarea
+from ai_extractor import analizar_texto_con_ia
 from task_storage import guardar_tarea
 from calendar_utils import crear_evento_google
 
@@ -59,10 +58,11 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await status_msg.edit_text(f"🗣️ *Texto detectado:*\n_{texto_detectado}_", parse_mode="Markdown")
 
-    # Validar y extraer tarea
-    if es_tarea_valida(texto_detectado):
-        tarea = extraer_tarea(texto_detectado)
-        
+    # Analizar y extraer tarea con Inteligencia Artificial
+    await status_msg.edit_text("⏳ Procesando con IA de OpenAI...", parse_mode="Markdown")
+    tarea = analizar_texto_con_ia(texto_detectado, openai_client)
+    
+    if tarea and tarea.get("es_tarea"):
         # Guardar contextualmente
         context.user_data['temp_tarea'] = tarea
         guardar_tarea(tarea)
@@ -73,11 +73,10 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
         reply_markup = InlineKeyboardMarkup(teclado)
         
-        texto_tarea = f"✅ *¡Tarea Identificada!*\n• Acción: `{tarea.get('accion')}`\n• Título: `{tarea.get('titulo')}`\n• Día: `{tarea.get('fecha')}`\n• Hora: `{tarea.get('hora')}`\n\n¿Dónde quieres agendarlo?"
+        texto_tarea = f"✅ *¡Tarea Identificada!*\n• Título: `{tarea.get('titulo')}`\n• Acción: `{tarea.get('accion')}`\n• Fecha: `{tarea.get('fecha')}`\n• Hora: `{tarea.get('hora')}`\n\n¿Quieres que la guarde en tu calendario?"
         await update.message.reply_text(texto_tarea, reply_markup=reply_markup, parse_mode="Markdown")
     else:
-        await update.message.reply_text("⚠️ No pude reconocer una tarea (falta un verbo, fecha u hora). Inténtalo más claro.")
-
+        await update.message.reply_text("⚠️ No pude reconocer una tarea u horario. Inténtalo más claro.")
 
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query

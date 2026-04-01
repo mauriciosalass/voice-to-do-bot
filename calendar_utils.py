@@ -34,37 +34,21 @@ def crear_evento_google(tarea):
     # Conectarse a la API de Google Calendar
     service = build('calendar', 'v3', credentials=creds)
 
-    # Determinar fecha y hora del evento
-    fecha = tarea['fecha'] or "mañana"
-    hora = tarea['hora'] or "12:00"
-    accion = tarea['accion'] or "hacer"
-    titulo = tarea['titulo'] or "tarea"
+    # Extraer la información validada por Inteligencia Artificial
+    fecha_str = tarea.get('fecha') or datetime.date.today().isoformat()
+    hora_str = tarea.get('hora') or "12:00"
+    accion = tarea.get('accion') or "Tarea delegada al asistente de voz"
+    titulo = tarea.get('titulo') or "Recordatorio de Voice-To-Do"
 
-    dias_semana = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
-    hoy = datetime.date.today()
-
-    # Traducir fechas relativas
-    if fecha in dias_semana:
-        hoy_dia = hoy.weekday()
-        target_dia = dias_semana.index(fecha)
-        delta = (target_dia - hoy_dia + 7) % 7
-        fecha_evento = hoy + datetime.timedelta(days=delta)
-    elif fecha == "mañana":
-        fecha_evento = hoy + datetime.timedelta(days=1)
-    else:
-        fecha_evento = hoy
-
-    # Procesar hora
+    # Construir datetime en formato ISO (provisto directamente por la IA)
+    inicio = f"{fecha_str}T{hora_str}:00"
+    
+    # Otorgar una duración de 1 hora al evento para Google Calendar
     try:
-        hora = hora.lower().replace("am", "").replace("pm", "").replace("hrs", "").replace("h", ":")
-        partes = hora.strip().split(":")
-        hora_str = f"{int(partes[0]):02}:{int(partes[1]) if len(partes) > 1 else 0:02}"
-    except:
-        hora_str = "12:00"
-
-    # Construir datetime en formato ISO
-    inicio = f"{fecha_evento}T{hora_str}:00"
-    fin = f"{fecha_evento}T{hora_str}:00"
+        dt_inicio = datetime.datetime.fromisoformat(inicio)
+        fin = (dt_inicio + datetime.timedelta(hours=1)).isoformat()
+    except Exception:
+        fin = inicio
 
     evento = {
         'summary': titulo,
